@@ -39,6 +39,8 @@ module.exports = function (grunt) {
     ], done);
   });
 
-  grunt.registerTask('release', ['update-files', 'bump'])
+  grunt.registerTask('release:patch', ['update-files', 'bump:patch']);
+  grunt.registerTask('release:minor', ['update-files', 'bump:minor']);
+  grunt.registerTask('release:major', ['update-files', 'bump:major']);
 
 };
