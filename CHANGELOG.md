@@ -1,5 +1,8 @@
 # Changelog
 
+### 0.1.0
+- Added npm publish
+
 ### 0.0.4
 - Pushes to `origin` instead of `upstream`
 
