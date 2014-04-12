@@ -1,5 +1,8 @@
 # Changelog
 
+### 0.0.4
+- Pushes to `origin` instead of `upstream`
+
 ### 0.0.3
 - Added `release:patch`, `release:minor`, `release:major`
 - Removed `release` default
