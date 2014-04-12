@@ -39,8 +39,14 @@ module.exports = function (grunt) {
     ], done);
   });
 
-  grunt.registerTask('release:patch', ['update-files', 'bump:patch']);
-  grunt.registerTask('release:minor', ['update-files', 'bump:minor']);
-  grunt.registerTask('release:major', ['update-files', 'bump:major']);
+  grunt.task.registerTask('npm-publish', function () {
+    var done = this.async();
+    var npm = require('child_process').spawn('npm', ['publish'], { stdio: 'inherit' });
+    npm.on('exit', done);
+  });
+
+  grunt.registerTask('release:patch', ['update-files', 'bump:patch', 'npm-publish']);
+  grunt.registerTask('release:minor', ['update-files', 'bump:minor', 'npm-publish']);
+  grunt.registerTask('release:major', ['update-files', 'bump:major', 'npm-publish']);
 
 };
