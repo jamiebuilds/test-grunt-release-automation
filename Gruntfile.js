@@ -1,6 +1,3 @@
-var async = require('async');
-var inquirer = require('inquirer');
-
 module.exports = function (grunt) {
 
   grunt.loadNpmTasks('grunt-bump');
@@ -23,20 +20,15 @@ module.exports = function (grunt) {
     }
   });
 
-  grunt.task.registerTask('update-files', function () {
+  grunt.task.registerTask('release', function () {
     var done = this.async();
-
-    async.series([
-      function (next) {
-        var editor = require('child_process').spawn('vim', ['CHANGELOG.md'], { stdio: 'inherit' });
-        editor.on('exit', next);
-      },
-
-      function (next) {
-        var editor = require('child_process').spawn('vim', ['UPGRADE-GUIDE.md'], { stdio: 'inherit' });
-        editor.on('exit', next);
+    var Release = require('./tasks/release');
+    var release = new Release({
+      done: done,
+      queueTask: function (task) {
+        grunt.task.run(task);
       }
-    ], done);
+    });
   });
 
   grunt.task.registerTask('npm-publish', function () {
@@ -44,9 +36,5 @@ module.exports = function (grunt) {
     var npm = require('child_process').spawn('npm', ['publish'], { stdio: 'inherit' });
     npm.on('exit', done);
   });
-
-  grunt.registerTask('release:patch', ['update-files', 'bump:patch', 'npm-publish']);
-  grunt.registerTask('release:minor', ['update-files', 'bump:minor', 'npm-publish']);
-  grunt.registerTask('release:major', ['update-files', 'bump:major', 'npm-publish']);
 
 };
