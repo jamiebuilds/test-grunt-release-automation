@@ -108,7 +108,7 @@ _.extend(Release.prototype, {
   },
 
   queueReleaseTask: function (next) {
-    this.queueTask('bump');
+    this.queueTask('bump:' + this.releaseType);
     next();
   }
 });
