@@ -156,5 +156,6 @@ module.exports = function () {
     .then( editUpgradeGuide )
     .then( confirmReadyToPublish )
     .then( updatePackageJson )
-    .then( updateBowerJson );
+    .then( updateBowerJson )
+    .then( addAllRepoFiles );
 };
