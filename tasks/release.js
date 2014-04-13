@@ -8,6 +8,7 @@ var Repo = require('gitty')('./');
 var checkStatusOfRepo = function () {
   return new Promise(function (resolve, reject) {
     Repo.status(function (err, status) {
+      console.log(status);
       if (status.staged.length !== 0 || status.not_staged !== 0) {
         reject('Please commit all files before performing a release.');
       } else {
