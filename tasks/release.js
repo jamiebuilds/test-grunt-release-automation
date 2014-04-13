@@ -5,6 +5,8 @@ var path = require('path');
 var inquirer = require('inquirer');
 var Repo = require('gitty')('./');
 
+var NEXT_VERSION;
+
 var checkStatusOfRepo = function () {
   return new Promise(function (resolve, reject) {
     Repo.status(function (err, status) {
@@ -46,19 +48,19 @@ var getVersion = function (type) {
       reject('Current version is invalid.');
     }
 
-    var nextVersion = semver.inc(currentVersion, type);
+    NEXT_VERSION = semver.inc(currentVersion, type);
 
-    if (!semver.valid( nextVersion )) {
+    if (!semver.valid( NEXT_VERSION )) {
       reject('Current version is invalid.');
     }
 
     inquirer.prompt([{
       type: 'confirm',
       name: 'confirm',
-      message: 'Is version ' + nextVersion + ' okay?',
+      message: 'Is version ' + NEXT_VERSION + ' okay?',
     }], function (answers) {
       if (answers.confirm) {
-        resolve(nextVersion);
+        resolve();
       } else {
         reject('Cancelled.');
       }
@@ -66,33 +68,33 @@ var getVersion = function (type) {
   });
 };
 
-var editChangelog = function (nextVersion) {
+var editChangelog = function () {
   return new Promise(function (resolve, reject) {
-    var editor = require('child_process').spawn('vim', ['+4', 'CHANGELOG.md'], { stdio: 'inherit' });
+    var editor = require('child_process').spawn('vim', ['CHANGELOG.md'], { stdio: 'inherit' });
     editor.on('exit', function () {
-      resolve(nextVersion);
+      resolve();
     });
   });
 };
 
-var editUpgradeGuide = function (nextVersion) {
+var editUpgradeGuide = function () {
   return new Promise(function (resolve, reject) {
-    var editor = require('child_process').spawn('vim', ['+3', 'UPGRADE-GUIDE.md'], { stdio: 'inherit' });
+    var editor = require('child_process').spawn('vim', ['UPGRADE-GUIDE.md'], { stdio: 'inherit' });
     editor.on('exit', function () {
-      resolve(nextVersion);
+      resolve();
     });
   });
 };
 
-var confirmReadyToPublish = function (nextVersion) {
+var confirmReadyToPublish = function () {
   return new Promise(function (resolve, reject) {
     inquirer.prompt([{
       type: 'confirm',
       name: 'confirm',
-      message: 'Are you ready to publish ' + nextVersion + '?',
+      message: 'Are you ready to publish ' + NEXT_VERSION + '?',
     }], function (answers) {
       if (answers.confirm) {
-        resolve(nextVersion);
+        resolve(NEXT_VERSION);
       } else {
         reject('Cancelled.');
       }
@@ -100,27 +102,27 @@ var confirmReadyToPublish = function (nextVersion) {
   });
 };
 
-var updateJsonFileVersion = function (file, nextVersion) {
+var updateJsonFileVersion = function (file) {
   return new Promise(function (resolve, reject) {
     var data = require(file);
 
-    data.version = nextVersion;
+    data.version = NEXT_VERSION;
     data = JSON.stringify(data, null, 2);
     data += '\n';
 
     fs.writeFile(path.resolve(__dirname, file), data, function (err) {
       if (err) return reject(err);
-      resolve(nextVersion);
+      resolve();
     });
   });
 };
 
-var updatePackageJson = function (nextVersion) {
-  return updateJsonFileVersion('../package.json', nextVersion);
+var updatePackageJson = function () {
+  return updateJsonFileVersion('../package.json');
 };
 
-var updateBowerJson = function (nextVersion) {
-  return updateJsonFileVersion('../bower.json', nextVersion);
+var updateBowerJson = function () {
+  return updateJsonFileVersion('../bower.json');
 };
 
 module.exports = function () {
