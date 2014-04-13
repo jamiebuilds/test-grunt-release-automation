@@ -207,7 +207,7 @@ var getGitCredentials = function () {
 
 var pushBranchToOrigin = function (credentials) {
   return new Promise(function (resolve, reject) {
-    Repo.push('origin', 'master', {}, function (err) {
+    Repo.push('origin', 'master', [], function (err) {
       if (err) return reject( err );
       resolve();
     }, credentials);
