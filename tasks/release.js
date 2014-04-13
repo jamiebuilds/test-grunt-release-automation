@@ -144,28 +144,36 @@ var getUnstagedFiles = function () {
 };
 
 var addAllRepoFiles = function (files) {
-  Repo.add(files, function (err) {
-    if (err) return reject(err);
-    resolve();
+  return new Promise(function (resolve, reject) {
+    Repo.add(files, function (err) {
+      if (err) return reject(err);
+      resolve();
+    });
   });
 };
 
 var commitNextVersion = function () {
-  Repo.commit('Release v' + NEXT_VERSION, function (err, output) {
-    if (err) return reject(err);
-    resolve(output);
+  return new Promise(function (resolve, reject) {
+    Repo.commit('Release v' + NEXT_VERSION, function (err, output) {
+      if (err) return reject(err);
+      resolve(output);
+    });
   });
 };
 
 var tagNextVersion = function (output) {
-  Repo.tag('v' + NEXT_VERSION, function (err) {
-    if (err) return reject(err);
-    resolve(output.branch);
+  return new Promise(function (resolve, reject) {
+    Repo.tag('v' + NEXT_VERSION, function (err) {
+      if (err) return reject(err);
+      resolve(output.branch);
+    });
   });
 };
 
 var pushBranchToOrigin = function (branch) {
-  console.log(branch);
+  return new Promise(function (resolve, reject) {
+    console.log(branch);
+  });
 };
 
 
