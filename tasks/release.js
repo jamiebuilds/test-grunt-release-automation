@@ -19,14 +19,6 @@ var checkStatusOfRepo = function () {
   });
 };
 
-var getRepoTags = function () {
-  return new Promise(function (resolve, reject) {
-    Repo.tags(function (err, tags) {
-      console.log(tags);
-    });
-  });
-};
-
 var getTypeOfRelease = function () {
   return new Promise(function (resolve, reject) {
     inquirer.prompt([{
@@ -68,6 +60,14 @@ var getVersion = function (type) {
   });
 };
 
+var checkForBadVersion = function () {
+  return new Promise(function (resolve, reject) {
+    Repo.tags(function (err, tags) {
+      console.log(tags);
+    });
+  });
+};
+
 var editChangelog = function () {
   return new Promise(function (resolve, reject) {
     var editor = require('child_process').spawn('vim', ['CHANGELOG.md'], { stdio: 'inherit' });
@@ -94,7 +94,7 @@ var confirmReadyToPublish = function () {
       message: 'Are you ready to publish ' + NEXT_VERSION + '?',
     }], function (answers) {
       if (answers.confirm) {
-        resolve(NEXT_VERSION);
+        resolve();
       } else {
         reject('Cancelled.');
       }
@@ -129,6 +129,7 @@ module.exports = function () {
   return checkStatusOfRepo()
     .then( getTypeOfRelease )
     .then( getVersion )
+    .then( checkForBadVersion )
     .then( editChangelog )
     .then( editUpgradeGuide )
     .then( confirmReadyToPublish )
