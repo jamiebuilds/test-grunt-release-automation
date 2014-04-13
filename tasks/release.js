@@ -144,7 +144,10 @@ var addAllRepoFiles = function () {
         Repo.commit('Release ' + NEXT_VERSION, function (err, output) {
           if (err) return reject(err);
 
-          console.log( output );
+          Repo.tag(NEXT_VERSION, function (err) {
+            // Repo.push('origin', output.branch )
+            resolve();
+          });
         });
       });
     });
