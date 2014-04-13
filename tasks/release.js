@@ -196,7 +196,7 @@ var getGitCredentials = function () {
       name: 'username',
       message: 'Whats your github username?'
     }, {
-      type: 'input',
+      type: 'password',
       name: 'password',
       message: 'Whats your github password?'
     }], function (answers) {
