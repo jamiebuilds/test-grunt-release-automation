@@ -63,8 +63,8 @@ var getVersion = function (type) {
 var checkForBadVersion = function () {
   return new Promise(function (resolve, reject) {
     Repo.tags(function (err, tags) {
-      if (tags.indexOf(NEXT_VERSION) > -1) {
-        reject('Tag ' + NEXT_VERSION + ' already exists.');
+      if (tags.indexOf('v' + NEXT_VERSION) > -1) {
+        reject('Tag v' + NEXT_VERSION + ' already exists.');
       } else {
         resolve();
       }
@@ -144,7 +144,7 @@ var addAllRepoFiles = function () {
         Repo.commit('Release ' + NEXT_VERSION, function (err, output) {
           if (err) return reject(err);
 
-          Repo.tag(NEXT_VERSION, function (err) {
+          Repo.tag('v' + NEXT_VERSION, function (err) {
             // Repo.push('origin', output.branch )
             resolve();
           });
