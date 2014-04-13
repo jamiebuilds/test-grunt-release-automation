@@ -134,9 +134,11 @@ var addAllRepoFiles = function () {
     Repo.status(function (err, status) {
       if (err) return reject(err);
 
-      console.log(status.not_staged);
+      var files = status.not_staged.map(function (item) {
+        return item.file;
+      });
 
-      Repo.add(status.not_staged, function (err) {
+      Repo.add(files, function (err) {
         if (err) return reject(err);
 
         Repo.commit('Release ' + NEXT_VERSION, function (err, output) {
