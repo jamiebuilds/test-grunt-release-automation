@@ -3,6 +3,8 @@ var semver = require('semver');
 var fs = require('fs');
 var path = require('path');
 var inquirer = require('inquirer');
+var shell = require('shelljs');
+
 var Repo = require('gitty')('./');
 
 var NEXT_VERSION; // todo: don't do this
@@ -211,6 +213,15 @@ var pushBranchToOrigin = function (credentials) {
       if (err) return reject( err );
       resolve();
     }, credentials);
+  });
+};
+
+var publishToNPM = function () {
+  return new Promise(function (resolve, reject) {
+    shell.exec('npm publish', function (code, output) {
+      if (code !== 0) return reject('npm publish exited with ' + code);
+      resolve();
+    });
   });
 };
 
