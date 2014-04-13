@@ -129,7 +129,7 @@ var updateBowerJson = function () {
   return updateJsonFileVersion('../bower.json');
 };
 
-var addAllRepoFiles = function () {
+var getUnstagedFiles = function () {
   return new Promise(function (resolve, reject) {
     Repo.status(function (err, status) {
       if (err) return reject(err);
@@ -138,21 +138,37 @@ var addAllRepoFiles = function () {
         return item.file;
       });
 
-      Repo.add(files, function (err) {
-        if (err) return reject(err);
-
-        Repo.commit('Release ' + NEXT_VERSION, function (err, output) {
-          if (err) return reject(err);
-
-          Repo.tag('v' + NEXT_VERSION, function (err) {
-            // Repo.push('origin', output.branch )
-            resolve();
-          });
-        });
-      });
+      resolve(files);
     });
   });
 };
+
+var addAllRepoFiles = function (files) {
+  Repo.add(files, function (err) {
+    if (err) return reject(err);
+    resolve();
+  });
+};
+
+var commitNextVersion = function () {
+  Repo.commit('Release v' + NEXT_VERSION, function (err, output) {
+    if (err) return reject(err);
+    resolve(output);
+  });
+};
+
+var tagNextVersion = function (output) {
+  Repo.tag('v' + NEXT_VERSION, function (err) {
+    if (err) return reject(err);
+    resolve(output.branch);
+  });
+};
+
+var pushBranchToOrigin = function (branch) {
+  console.log(branch);
+};
+
+
 
 module.exports = function () {
   return checkStatusOfRepo()
@@ -164,5 +180,9 @@ module.exports = function () {
     .then( confirmReadyToPublish )
     .then( updatePackageJson )
     .then( updateBowerJson )
-    .then( addAllRepoFiles );
+    .then( getUnstagedFiles )
+    .then( addAllRepoFiles )
+    .then( commitNextVersion )
+    .then( tagNextVersion )
+    .then( pushBranchToOrigin );
 };
