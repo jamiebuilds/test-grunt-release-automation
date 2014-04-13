@@ -63,7 +63,11 @@ var getVersion = function (type) {
 var checkForBadVersion = function () {
   return new Promise(function (resolve, reject) {
     Repo.tags(function (err, tags) {
-      console.log(tags);
+      if (tags.indexOf(NEXT_VERSION) > -1) {
+        reject('Tag ' + NEXT_VERSION + ' already exists.');
+      } else {
+        resolve();
+      }
     });
   });
 };
