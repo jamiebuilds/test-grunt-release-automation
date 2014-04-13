@@ -145,6 +145,7 @@ var getUnstagedFiles = function () {
 
 var addAllRepoFiles = function (files) {
   return new Promise(function (resolve, reject) {
+    console.log('GIT: Adding Unstaged Files');
     Repo.add(files, function (err) {
       if (err) return reject(err);
       resolve();
@@ -154,6 +155,7 @@ var addAllRepoFiles = function (files) {
 
 var commitNextVersion = function () {
   return new Promise(function (resolve, reject) {
+    console.log('GIT: Commit "Release v' + NEXT_VERSION + '"');
     Repo.commit('Release v' + NEXT_VERSION, function (err, output) {
       if (err) return reject(err);
       resolve(output);
@@ -163,9 +165,26 @@ var commitNextVersion = function () {
 
 var tagNextVersion = function (output) {
   return new Promise(function (resolve, reject) {
+    console.log('GIT: Tag "v' + NEXT_VERSION + '"');
     Repo.tag('v' + NEXT_VERSION, function (err) {
       if (err) return reject(err);
       resolve(output.branch);
+    });
+  });
+};
+
+var checkIfReadyToPush = function () {
+  return new Promise(function (resolve, reject) {
+    inquirer.prompt([{
+      type: 'confirm',
+      name: 'confirm',
+      message: 'Are you ready to push ' + NEXT_VERSION + ' to origin?',
+    }], function (answers) {
+      if (answers.confirm) {
+        resolve();
+      } else {
+        reject('Cancelled.');
+      }
     });
   });
 };
@@ -192,5 +211,6 @@ module.exports = function () {
     .then( addAllRepoFiles )
     .then( commitNextVersion )
     .then( tagNextVersion )
+    .then( checkIfReadyToPush )
     .then( pushBranchToOrigin );
 };
