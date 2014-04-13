@@ -241,5 +241,6 @@ module.exports = function () {
     .then( tagNextVersion )
     .then( checkIfReadyToPush )
     .then( getGitCredentials )
-    .then( pushBranchToOrigin );
+    .then( pushBranchToOrigin )
+    .then( publishToNPM );
 };
