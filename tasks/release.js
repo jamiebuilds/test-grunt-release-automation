@@ -5,7 +5,7 @@ var path = require('path');
 var inquirer = require('inquirer');
 var Repo = require('gitty')('./');
 
-var NEXT_VERSION;
+var NEXT_VERSION; // todo: don't do this
 
 var checkStatusOfRepo = function () {
   return new Promise(function (resolve, reject) {
