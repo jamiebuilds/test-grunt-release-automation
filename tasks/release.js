@@ -134,6 +134,8 @@ var addAllRepoFiles = function () {
     Repo.status(function (err, status) {
       if (err) return reject(err);
 
+      console.log(status.not_staged);
+
       Repo.add(status.not_staged, function (err) {
         if (err) return reject(err);
 
