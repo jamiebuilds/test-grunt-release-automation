@@ -1,116 +1,135 @@
-var async = require('async');
+var Promise = require('bluebird');
+var semver = require('semver');
 var fs = require('fs');
+var path = require('path');
 var inquirer = require('inquirer');
-var _ = require('underscore');
+var Repo = require('gitty')('./');
 
-function Release (options) {
-  this.done = options.done;
-  this.queueTask = options.queueTask;
+var checkStatusOfRepo = function () {
+  return new Promise(function (resolve, reject) {
+    Repo.status(function (err, status) {
+      if (status.staged.length !== 0 || status.not_staged !== 0) {
+        reject('Please commit all files before performing a release.');
+      } else {
+        resolve();
+      }
+    });
+  });
+};
 
-  async.series([
-    _.bind(this.getTypeOfRelease, this),
-    _.bind(this.getPrevVersion, this),
-    _.bind(this.getNextVersion, this),
-    _.bind(this.confirmNextVersion, this),
-    _.bind(this.prepareChangelog, this),
-    _.bind(this.editChangelog, this),
-    _.bind(this.editUpgradeGuide, this),
-    _.bind(this.confirmReadyToRelease, this),
-    _.bind(this.queueReleaseTask, this)
-  ], this.done);
-}
+var getRepoTags = function () {
+  return new Promise(function (resolve, reject) {
+    Repo.tags(function (err, tags) {
+      console.log(tags);
+    });
+  });
+};
 
-_.extend(Release.prototype, {
-
-  getTypeOfRelease: function (next) {
-    var self = this;
+var getTypeOfRelease = function () {
+  return new Promise(function (resolve, reject) {
     inquirer.prompt([{
       type : 'list',
       name : 'type',
       message : 'What kind of release is this?',
       choices : ['patch', 'minor', 'major']
     }], function (answers) {
-      self.releaseType = answers.type;
-      next();
+      resolve(answers.type);
     });
-  },
+  });
+};
 
-  getPrevVersion: function (next) {
-    this.prevVersion = require('../package.json').version;
-    next();
-  },
+var getVersion = function (type) {
+  return new Promise(function (resolve, reject) {
+    var currentVersion = require('../package.json').version;
 
-  getNextVersion: function (next) {
-    var version = this.prevVersion.split('.').map(function (num) {
-      return parseInt(num, 10);
-    });
+    if (!semver.valid( currentVersion )) {
+      reject('Current version is invalid.');
+    }
 
-    if (this.releaseType === 'patch') { version[2] += 1; }
-    if (this.releaseType === 'minor') { version[1] += 1; version[2] = 0; }
-    if (this.releaseType === 'major') { version[0] += 1; version[1] = 0; version[2] = 0; }
+    var nextVersion = semver.inc(currentVersion, type);
 
-    this.nextVersion = version.join('.');
-    next();
-  },
-
-  confirmNextVersion: function (next) {
-    var self = this;
+    if (!semver.valid( nextVersion )) {
+      reject('Current version is invalid.');
+    }
 
     inquirer.prompt([{
       type: 'confirm',
       name: 'confirm',
-      message: 'Is version ' + self.nextVersion + ' correct?',
+      message: 'Is version ' + nextVersion + ' okay?',
     }], function (answers) {
       if (answers.confirm) {
-        next();
+        resolve(nextVersion);
       } else {
-        self.done();
+        reject('Cancelled.');
       }
     });
-  },
+  });
+};
 
-  prepareChangelog: function (next) {
-    var self = this;
-
-    fs.readFile('./CHANGELOG.md', function (err, data) {
-      data = data.toString().split('\n\n');
-      data.splice(1, 0, '### ' + self.nextVersion + '\n');
-      data = data.join('\n\n');
-
-      fs.writeFile('./CHANGELOG.md', data, next);
-    });
-  },
-
-  editChangelog: function (next) {
+var editChangelog = function (nextVersion) {
+  return new Promise(function (resolve, reject) {
     var editor = require('child_process').spawn('vim', ['+4', 'CHANGELOG.md'], { stdio: 'inherit' });
-    editor.on('exit', next);
-  },
+    editor.on('exit', function () {
+      resolve(nextVersion);
+    });
+  });
+};
 
-  editUpgradeGuide: function (next) {
+var editUpgradeGuide = function (nextVersion) {
+  return new Promise(function (resolve, reject) {
     var editor = require('child_process').spawn('vim', ['+3', 'UPGRADE-GUIDE.md'], { stdio: 'inherit' });
-    editor.on('exit', next);
-  },
+    editor.on('exit', function () {
+      resolve(nextVersion);
+    });
+  });
+};
 
-  confirmReadyToRelease: function (next) {
-    var self = this;
-
+var confirmReadyToPublish = function (nextVersion) {
+  return new Promise(function (resolve, reject) {
     inquirer.prompt([{
       type: 'confirm',
       name: 'confirm',
-      message: 'Are you ready to release ' + self.nextVersion + '?',
+      message: 'Are you ready to publish ' + nextVersion + '?',
     }], function (answers) {
       if (answers.confirm) {
-        next();
+        resolve(nextVersion);
       } else {
-        self.done();
+        reject('Cancelled.');
       }
     });
-  },
+  });
+};
 
-  queueReleaseTask: function (next) {
-    this.queueTask('bump:' + this.releaseType);
-    next();
-  }
-});
+var updateJsonFileVersion = function (file, nextVersion) {
+  return new Promise(function (resolve, reject) {
+    var data = require(file);
 
-module.exports = Release;
+    data.version = nextVersion;
+    data = JSON.stringify(data, null, 2);
+    data += '\n';
+
+    fs.writeFile(path.resolve(__dirname, file), data, function (err) {
+      if (err) return reject(err);
+      resolve(nextVersion);
+    });
+  });
+};
+
+var updatePackageJson = function (nextVersion) {
+  return updateJsonFileVersion('../package.json', nextVersion);
+};
+
+var updateBowerJson = function (nextVersion) {
+  return updateJsonFileVersion('../bower.json', nextVersion);
+};
+
+module.exports = function () {
+  return checkStatusOfRepo()
+    .then( getTypeOfRelease )
+    .then( getVersion )
+    .then( editChangelog )
+    .then( editUpgradeGuide )
+    .then( confirmReadyToPublish )
+    .then( updatePackageJson )
+    .then( updateBowerJson );
+};

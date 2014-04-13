@@ -1,3 +1,5 @@
+var release = require('./tasks/release');
+
 module.exports = function (grunt) {
 
   grunt.loadNpmTasks('grunt-bump');
@@ -22,13 +24,13 @@ module.exports = function (grunt) {
 
   grunt.task.registerTask('release', function () {
     var done = this.async();
-    var Release = require('./tasks/release');
-    var release = new Release({
-      done: done,
-      queueTask: function (task) {
-        grunt.task.run(task);
-      }
-    });
+    release().then(function () {
+      done();
+    })
+    .catch(function (err) {
+      grunt.log.error(err);
+      done();
+    })
   });
 
   grunt.task.registerTask('npm-publish', function () {

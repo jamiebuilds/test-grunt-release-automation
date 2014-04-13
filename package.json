@@ -1,6 +1,6 @@
 {
   "name": "grunt-test",
-  "version": "0.1.2",
+  "version": "0.3.3",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -15,6 +15,7 @@
     "inquirer": "^0.4.1",
     "async": "^0.7.0",
     "grunt-bump": "0.0.13",
-    "underscore": "^1.6.0"
+    "underscore": "^1.6.0",
+    "gitty": "^2.1.0"
   }
 }
