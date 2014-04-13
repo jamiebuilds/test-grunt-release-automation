@@ -129,6 +129,24 @@ var updateBowerJson = function () {
   return updateJsonFileVersion('../bower.json');
 };
 
+var addAllRepoFiles = function () {
+  return new Promise(function (resolve, reject) {
+    Repo.status(function (err, status) {
+      if (err) return reject(err);
+
+      Repo.add(status.not_staged, function (err) {
+        if (err) return reject(err);
+
+        Repo.commit('Release ' + NEXT_VERSION, function (err, output) {
+          if (err) return reject(err);
+
+          console.log( output );
+        });
+      });
+    });
+  });
+};
+
 module.exports = function () {
   return checkStatusOfRepo()
     .then( getTypeOfRelease )
