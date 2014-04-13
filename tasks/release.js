@@ -158,17 +158,17 @@ var commitNextVersion = function () {
     console.log('GIT: Commit "Release v' + NEXT_VERSION + '"');
     Repo.commit('Release v' + NEXT_VERSION, function (err, output) {
       if (err) return reject(err);
-      resolve(output);
+      resolve();
     });
   });
 };
 
-var tagNextVersion = function (output) {
+var tagNextVersion = function () {
   return new Promise(function (resolve, reject) {
     console.log('GIT: Tag "v' + NEXT_VERSION + '"');
     Repo.tag('v' + NEXT_VERSION, function (err) {
       if (err) return reject(err);
-      resolve(output.branch);
+      resolve();
     });
   });
 };
@@ -178,7 +178,7 @@ var checkIfReadyToPush = function () {
     inquirer.prompt([{
       type: 'confirm',
       name: 'confirm',
-      message: 'Are you ready to push ' + NEXT_VERSION + ' to origin?',
+      message: 'Are you ready to push v' + NEXT_VERSION + ' to origin?',
     }], function (answers) {
       if (answers.confirm) {
         resolve();
@@ -189,13 +189,30 @@ var checkIfReadyToPush = function () {
   });
 };
 
-var pushBranchToOrigin = function (branch) {
+var getGitCredentials = function () {
   return new Promise(function (resolve, reject) {
-    console.log(branch);
+    inquirer.prompt([{
+      type: 'input',
+      name: 'username',
+      message: 'Whats your github username?'
+    }, {
+      type: 'input',
+      name: 'password',
+      message: 'Whats your github password?'
+    }], function (answers) {
+      resolve(answers);
+    });
   });
 };
 
-
+var pushBranchToOrigin = function (credentials) {
+  return new Promise(function (resolve, reject) {
+    Repo.push('origin', 'master', function (err) {
+      if (err) return reject( err );
+      resolve();
+    }, credentials);
+  });
+};
 
 module.exports = function () {
   return checkStatusOfRepo()
@@ -212,5 +229,6 @@ module.exports = function () {
     .then( commitNextVersion )
     .then( tagNextVersion )
     .then( checkIfReadyToPush )
+    .then( getGitCredentials )
     .then( pushBranchToOrigin );
 };
