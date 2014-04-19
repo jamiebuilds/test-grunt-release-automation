@@ -1,28 +1,25 @@
 var Promise = require('bluebird');
 var semver = require('semver');
-var fs = require('fs');
+var fs = Promise.promisifyAll(require('fs'));
 var path = require('path');
-var inquirer = require('inquirer');
+var inquirer = Promise.promisifyAll(require('inquirer'), function () {
+  console.log(arguments);
+});
 var shell = require('shelljs');
-
-var Repo = require('gitty')('./');
+var Repo = Promise.promisifyAll(require('gitty')('./'));
 
 var NEXT_VERSION; // todo: don't do this
 
-var checkStatusOfRepo = function () {
-  return new Promise(function (resolve, reject) {
-    Repo.status(function (err, status) {
-      if (status.staged.length > 0 || status.not_staged.length > 0) {
-        reject('Please commit all files before performing a release.');
-      } else {
-        resolve();
-      }
-    });
+var checkStatusOfRepo = function() {
+  return Repo.statusAsync().then(function(status) {
+    if (status.staged.length > 0 || status.not_staged.length > 0) {
+      throw new Error('Please commit all files before performing a release.');
+    }
   });
 };
 
-var getTypeOfRelease = function () {
-  return new Promise(function (resolve, reject) {
+var getTypeOfRelease = function() {
+  return new Promise(function(resolve, reject) {
     inquirer.prompt([{
       type : 'list',
       name : 'type',
@@ -34,8 +31,8 @@ var getTypeOfRelease = function () {
   });
 };
 
-var getVersion = function (type) {
-  return new Promise(function (resolve, reject) {
+var getVersion = function(type) {
+  return new Promise(function(resolve, reject) {
     var currentVersion = require('../package.json').version;
 
     if (!semver.valid( currentVersion )) {
@@ -52,7 +49,7 @@ var getVersion = function (type) {
       type: 'confirm',
       name: 'confirm',
       message: 'Is version ' + NEXT_VERSION + ' okay?',
-    }], function (answers) {
+    }], function(answers) {
       if (answers.confirm) {
         resolve();
       } else {
@@ -62,38 +59,34 @@ var getVersion = function (type) {
   });
 };
 
-var checkForBadVersion = function () {
-  return new Promise(function (resolve, reject) {
-    Repo.tags(function (err, tags) {
-      if (tags.indexOf('v' + NEXT_VERSION) > -1) {
-        reject('Tag v' + NEXT_VERSION + ' already exists.');
-      } else {
-        resolve();
-      }
-    });
+var checkForBadVersion = function() {
+  return Repo.tagsAsync().then(function(tags) {
+    if (tags.indexOf('v' + NEXT_VERSION) > -1) {
+      throw new Error('Tag v' + NEXT_VERSION + ' already exists.');
+    }
   });
 };
 
-var editChangelog = function () {
-  return new Promise(function (resolve, reject) {
+var editChangelog = function() {
+  return new Promise(function(resolve, reject) {
     var editor = require('child_process').spawn('vim', ['CHANGELOG.md'], { stdio: 'inherit' });
-    editor.on('exit', function () {
+    editor.on('exit', function() {
       resolve();
     });
   });
 };
 
-var editUpgradeGuide = function () {
-  return new Promise(function (resolve, reject) {
+var editUpgradeGuide = function() {
+  return new Promise(function(resolve, reject) {
     var editor = require('child_process').spawn('vim', ['UPGRADE-GUIDE.md'], { stdio: 'inherit' });
-    editor.on('exit', function () {
+    editor.on('exit', function() {
       resolve();
     });
   });
 };
 
-var confirmReadyToPublish = function () {
-  return new Promise(function (resolve, reject) {
+var confirmReadyToPublish = function() {
+  return new Promise(function(resolve, reject) {
     inquirer.prompt([{
       type: 'confirm',
       name: 'confirm',
@@ -108,71 +101,46 @@ var confirmReadyToPublish = function () {
   });
 };
 
-var updateJsonFileVersion = function (file) {
-  return new Promise(function (resolve, reject) {
-    var data = require(file);
+var updateJsonFileVersion = function(file) {
+  var data = require(file);
+  var path = path.resolve(__dirname, file);
 
-    data.version = NEXT_VERSION;
-    data = JSON.stringify(data, null, 2);
-    data += '\n';
+  data.version = NEXT_VERSION;
+  data = JSON.stringify(data, null, 2);
+  data += '\n';
 
-    fs.writeFile(path.resolve(__dirname, file), data, function (err) {
-      if (err) return reject(err);
-      resolve();
-    });
-  });
+  return fs.writeFileAsync(path, data);
 };
 
-var updatePackageJson = function () {
+var updatePackageJson = function() {
   return updateJsonFileVersion('../package.json');
 };
 
-var updateBowerJson = function () {
+var updateBowerJson = function() {
   return updateJsonFileVersion('../bower.json');
 };
 
-var getUnstagedFiles = function () {
-  return new Promise(function (resolve, reject) {
-    Repo.status(function (err, status) {
-      if (err) return reject(err);
-
-      var files = status.not_staged.map(function (item) {
-        return item.file;
-      });
-
-      resolve(files);
+var getUnstagedFiles = function() {
+  return Repo.statusAsync().then(function(status) {
+    return status.not_staged.map(function(item) {
+      return item.file;
     });
   });
 };
 
 var addAllRepoFiles = function (files) {
-  return new Promise(function (resolve, reject) {
-    console.log('GIT: Adding Unstaged Files');
-    Repo.add(files, function (err) {
-      if (err) return reject(err);
-      resolve();
-    });
-  });
+  console.log('GIT: Adding Unstaged Files');
+  return Repo.addAsync(files);
 };
 
 var commitNextVersion = function () {
-  return new Promise(function (resolve, reject) {
-    console.log('GIT: Commit "Release v' + NEXT_VERSION + '"');
-    Repo.commit('Release v' + NEXT_VERSION, function (err, output) {
-      if (err) return reject(err);
-      resolve();
-    });
-  });
+  console.log('GIT: Commit "Release v' + NEXT_VERSION + '"');
+  return Repo.commitAsync('Release v' + NEXT_VERSION);
 };
 
 var tagNextVersion = function () {
-  return new Promise(function (resolve, reject) {
-    console.log('GIT: Tag "v' + NEXT_VERSION + '"');
-    Repo.tag('v' + NEXT_VERSION, function (err) {
-      if (err) return reject(err);
-      resolve();
-    });
-  });
+  console.log('GIT: Tag "v' + NEXT_VERSION + '"');
+  return Repo.tagAsync('v' + NEXT_VERSION);
 };
 
 var checkIfReadyToPush = function () {
@@ -226,7 +194,8 @@ var publishToNPM = function () {
 };
 
 module.exports = function () {
-  return checkStatusOfRepo()
+  return Promise.bind({})
+    .then( checkStatusOfRepo )
     .then( getTypeOfRelease )
     .then( getVersion )
     .then( checkForBadVersion )
