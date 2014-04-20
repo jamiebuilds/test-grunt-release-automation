@@ -8,7 +8,7 @@ var inquirer = Promise.promisifyAll(require('inquirer'), function () {
 var shell = require('shelljs');
 var Repo = Promise.promisifyAll(require('gitty')('./'));
 
-var NEXT_VERSION; // todo: don't do this
+// var NEXT_VERSION; // todo: don't do this
 
 var checkStatusOfRepo = function() {
   return Repo.statusAsync().then(function(status) {
@@ -32,23 +32,23 @@ var getTypeOfRelease = function() {
 };
 
 var getVersion = function(type) {
+  var currentVersion = require('../package.json').version;
+
+  if (!semver.valid( currentVersion )) {
+    reject('Current version is invalid.');
+  }
+
+  this.NEXT_VERSION = semver.inc(currentVersion, type);
+
+  if (!semver.valid( NEXT_VERSION )) {
+    reject('Current version is invalid.');
+  }
+
   return new Promise(function(resolve, reject) {
-    var currentVersion = require('../package.json').version;
-
-    if (!semver.valid( currentVersion )) {
-      reject('Current version is invalid.');
-    }
-
-    NEXT_VERSION = semver.inc(currentVersion, type);
-
-    if (!semver.valid( NEXT_VERSION )) {
-      reject('Current version is invalid.');
-    }
-
     inquirer.prompt([{
       type: 'confirm',
       name: 'confirm',
-      message: 'Is version ' + NEXT_VERSION + ' okay?',
+      message: 'Is version ' + self.NEXT_VERSION + ' okay?',
     }], function(answers) {
       if (answers.confirm) {
         resolve();
@@ -61,8 +61,8 @@ var getVersion = function(type) {
 
 var checkForBadVersion = function() {
   return Repo.tagsAsync().then(function(tags) {
-    if (tags.indexOf('v' + NEXT_VERSION) > -1) {
-      throw new Error('Tag v' + NEXT_VERSION + ' already exists.');
+    if (tags.indexOf('v' + this.NEXT_VERSION) > -1) {
+      throw new Error('Tag v' + this.NEXT_VERSION + ' already exists.');
     }
   });
 };
@@ -86,11 +86,12 @@ var editUpgradeGuide = function() {
 };
 
 var confirmReadyToPublish = function() {
+  var self;
   return new Promise(function(resolve, reject) {
     inquirer.prompt([{
       type: 'confirm',
       name: 'confirm',
-      message: 'Are you ready to publish ' + NEXT_VERSION + '?',
+      message: 'Are you ready to publish ' + self.NEXT_VERSION + '?',
     }], function (answers) {
       if (answers.confirm) {
         resolve();
@@ -105,7 +106,7 @@ var updateJsonFileVersion = function(file) {
   var data = require(file);
   var path = path.resolve(__dirname, file);
 
-  data.version = NEXT_VERSION;
+  data.version = this.NEXT_VERSION;
   data = JSON.stringify(data, null, 2);
   data += '\n';
 
