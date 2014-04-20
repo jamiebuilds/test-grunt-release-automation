@@ -42,7 +42,7 @@ var getVersion = function(type) {
   this.NEXT_VERSION = semver.inc(currentVersion, type);
 
   if (!semver.valid( this.NEXT_VERSION )) {
-    reject('Current version is invalid.');
+    throw new Error('Current version is invalid.');
   }
 
   return new Promise(function(resolve, reject) {
