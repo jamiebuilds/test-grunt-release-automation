@@ -69,6 +69,7 @@ var checkForBadVersion = function() {
 };
 
 var editChangelog = function() {
+  console.log('VIM: Editting Changelog');
   return new Promise(function(resolve, reject) {
     var editor = require('child_process').spawn('vim', ['CHANGELOG.md'], { stdio: 'inherit' });
     editor.on('exit', function() {
@@ -78,6 +79,7 @@ var editChangelog = function() {
 };
 
 var editUpgradeGuide = function() {
+  console.log('VIM: Editting Upgrade Guide');
   return new Promise(function(resolve, reject) {
     var editor = require('child_process').spawn('vim', ['UPGRADE-GUIDE.md'], { stdio: 'inherit' });
     editor.on('exit', function() {
