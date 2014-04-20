@@ -74,7 +74,7 @@ var editUpgradeGuide = function() {
 };
 
 var confirmReadyToPublish = function() {
-  promptAsync([{
+  return promptAsync([{
     type: 'confirm',
     name: 'confirm',
     message: 'Are you ready to publish ' + this.NEXT_VERSION + '?',
