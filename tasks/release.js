@@ -109,9 +109,13 @@ var updateJsonFileVersion = function(file) {
   var data = require(file);
   var filepath = path.resolve(__dirname, file);
 
+  console.log(data);
+
   data.version = this.NEXT_VERSION;
   data = JSON.stringify(data, null, 2);
   data += '\n';
+
+  throw new Error('hga');
 
   return fs.writeFileAsync(filepath, data);
 };
