@@ -89,7 +89,7 @@ var editUpgradeGuide = function() {
 };
 
 var confirmReadyToPublish = function() {
-  var self;
+  var self = this;
   return new Promise(function(resolve, reject) {
     inquirer.prompt([{
       type: 'confirm',
