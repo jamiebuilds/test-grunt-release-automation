@@ -5,7 +5,6 @@ var path = require('path');
 var inquirer = require('inquirer');
 var shell = require('shelljs');
 var Repo = Promise.promisifyAll(require('gitty')('./'));
-// var execAsyncProcess = Promise.promisify(require('child_process').exec);
 var editorAsync = Promise.promisify(require('editor'));
 
 var promptAsync = function(questions) {
