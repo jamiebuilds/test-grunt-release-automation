@@ -138,21 +138,22 @@ var addAllRepoFiles = function (files) {
 };
 
 var commitNextVersion = function () {
-  console.log('GIT: Commit "Release v' + NEXT_VERSION + '"');
-  return Repo.commitAsync('Release v' + NEXT_VERSION);
+  console.log('GIT: Commit "Release v' + this.NEXT_VERSION + '"');
+  return Repo.commitAsync('Release v' + this.NEXT_VERSION);
 };
 
 var tagNextVersion = function () {
-  console.log('GIT: Tag "v' + NEXT_VERSION + '"');
-  return Repo.tagAsync('v' + NEXT_VERSION);
+  console.log('GIT: Tag "v' + this.NEXT_VERSION + '"');
+  return Repo.tagAsync('v' + this.NEXT_VERSION);
 };
 
 var checkIfReadyToPush = function () {
+  var self = this;
   return new Promise(function (resolve, reject) {
     inquirer.prompt([{
       type: 'confirm',
       name: 'confirm',
-      message: 'Are you ready to push v' + NEXT_VERSION + ' to origin?',
+      message: 'Are you ready to push v' + self.NEXT_VERSION + ' to origin?',
     }], function (answers) {
       if (answers.confirm) {
         resolve();
