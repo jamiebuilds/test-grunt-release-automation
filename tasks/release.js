@@ -32,6 +32,7 @@ var getTypeOfRelease = function() {
 };
 
 var getVersion = function(type) {
+  var self = this;
   var currentVersion = require('../package.json').version;
 
   if (!semver.valid( currentVersion )) {
