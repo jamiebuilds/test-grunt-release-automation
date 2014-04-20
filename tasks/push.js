@@ -1,8 +1,7 @@
 var Promise = require('bluebird');
 var promptAsync = require('./prompt');
-var fs = Promise.promisifyAll(require('fs'));
-var path = require('path');
 var Repo = Promise.promisifyAll(require('gitty')('./'));
+var shell = require('shelljs');
 
 module.exports = {
   checkIfReadyToPush: function () {
