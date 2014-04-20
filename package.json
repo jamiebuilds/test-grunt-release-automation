@@ -17,6 +17,7 @@
     "grunt-bump": "0.0.13",
     "underscore": "^1.6.0",
     "gitty": "^2.1.0",
-    "shelljs": "^0.2.6"
+    "shelljs": "^0.2.6",
+    "editor": "^0.1.0"
   }
 }
