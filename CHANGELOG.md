@@ -1,6 +1,6 @@
 # Changelog
 
-### 
+###
 
 ### 0.1.2
 - Fix for grunt bump
