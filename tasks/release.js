@@ -36,7 +36,7 @@ var getVersion = function(type) {
   var currentVersion = require('../package.json').version;
 
   if (!semver.valid( currentVersion )) {
-    reject('Current version is invalid.');
+    throw new Error('Current version is invalid.');
   }
 
   this.NEXT_VERSION = semver.inc(currentVersion, type);
