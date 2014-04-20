@@ -107,13 +107,13 @@ var confirmReadyToPublish = function() {
 
 var updateJsonFileVersion = function(file) {
   var data = require(file);
-  var path = path.resolve(__dirname, file);
+  var filepath = path.resolve(__dirname, file);
 
   data.version = this.NEXT_VERSION;
   data = JSON.stringify(data, null, 2);
   data += '\n';
 
-  return fs.writeFileAsync(path, data);
+  return fs.writeFileAsync(filepath, data);
 };
 
 var updatePackageJson = function() {
