@@ -105,13 +105,11 @@ var confirmReadyToPublish = function() {
   });
 };
 
-var updateJsonFileVersion = function(file) {
+var updateJsonFileVersion = function(file, version) {
   var data = require(file);
   var filepath = path.resolve(__dirname, file);
 
-  console.log(data);
-
-  data.version = this.NEXT_VERSION;
+  data.version = version;
   data = JSON.stringify(data, null, 2);
   data += '\n';
 
@@ -123,11 +121,11 @@ var updateJsonFileVersion = function(file) {
 };
 
 var updatePackageJson = function() {
-  return updateJsonFileVersion('../package.json');
+  return updateJsonFileVersion('../package.json', this.NEXT_VERSION);
 };
 
 var updateBowerJson = function() {
-  return updateJsonFileVersion('../bower.json');
+  return updateJsonFileVersion('../bower.json', this.NEXT_VERSION);
 };
 
 var getUnstagedFiles = function() {
