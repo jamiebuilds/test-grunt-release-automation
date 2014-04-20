@@ -65,7 +65,7 @@ var checkForBadVersion = function() {
 
 var editChangelog = function() {
   console.log('VIM: Edited CHANGELOG');
-  return execAsyncProcess('vim CHANGELOG.md');
+  return execAsyncProcess('subl -w CHANGELOG.md');
 };
 
 var editUpgradeGuide = function() {
