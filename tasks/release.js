@@ -2,13 +2,18 @@ var Promise = require('bluebird');
 var semver = require('semver');
 var fs = Promise.promisifyAll(require('fs'));
 var path = require('path');
-var inquirer = Promise.promisifyAll(require('inquirer'), function () {
-  console.log(arguments);
-});
+var inquirer = require('inquirer');
 var shell = require('shelljs');
 var Repo = Promise.promisifyAll(require('gitty')('./'));
+var execAsyncProcess = Promise.promisify(require('child_process').exec);
 
-// var NEXT_VERSION; // todo: don't do this
+var promptAsync = function(questions) {
+  return new Promise(function(resolve, reject) {
+    inquirer.prompt(questions, function (answers) {
+      resolve(answers);
+    });
+  });
+};
 
 var checkStatusOfRepo = function() {
   return Repo.statusAsync().then(function(status) {
@@ -19,16 +24,12 @@ var checkStatusOfRepo = function() {
 };
 
 var getTypeOfRelease = function() {
-  return new Promise(function(resolve, reject) {
-    inquirer.prompt([{
-      type : 'list',
-      name : 'type',
-      message : 'What kind of release is this?',
-      choices : ['patch', 'minor', 'major']
-    }], function (answers) {
-      resolve(answers.type);
-    });
-  });
+  return promptAsync([{
+    type : 'list',
+    name : 'type',
+    message : 'What kind of release is this?',
+    choices : ['patch', 'minor', 'major']
+  }]).get('type');
 };
 
 var getVersion = function(type) {
@@ -45,18 +46,12 @@ var getVersion = function(type) {
     throw new Error('Current version (' + this.NEXT_VERSION + ') is invalid.');
   }
 
-  return new Promise(function(resolve, reject) {
-    inquirer.prompt([{
-      type: 'confirm',
-      name: 'confirm',
-      message: 'Is version ' + self.NEXT_VERSION + ' okay?',
-    }], function(answers) {
-      if (answers.confirm) {
-        resolve();
-      } else {
-        reject('Cancelled.');
-      }
-    });
+  return promptAsync([{
+    type: 'confirm',
+    name: 'confirm',
+    message: 'Is version ' + this.NEXT_VERSION + ' okay?',
+  }]).then(function(answers) {
+    if (!answers.confirm) throw new Error('Cancelled.');
   });
 };
 
@@ -69,39 +64,22 @@ var checkForBadVersion = function() {
 };
 
 var editChangelog = function() {
-  console.log('VIM: Editting Changelog');
-  return new Promise(function(resolve, reject) {
-    var editor = require('child_process').spawn('vim', ['CHANGELOG.md'], { stdio: 'inherit' });
-    editor.on('exit', function() {
-      resolve();
-    });
-  });
+  console.log('VIM: Edited CHANGELOG');
+  return execAsyncProcess('vim', ['CHANGELOG.md'], { stdio: 'inherit' });
 };
 
 var editUpgradeGuide = function() {
-  console.log('VIM: Editting Upgrade Guide');
-  return new Promise(function(resolve, reject) {
-    var editor = require('child_process').spawn('vim', ['UPGRADE-GUIDE.md'], { stdio: 'inherit' });
-    editor.on('exit', function() {
-      resolve();
-    });
-  });
+  console.log('VIM: Edited Upgrade Guide');
+  return execAsyncProcess('vim', ['UPGRADE-GUIDE.md'], { stdio: 'inherit' });
 };
 
 var confirmReadyToPublish = function() {
-  var self = this;
-  return new Promise(function(resolve, reject) {
-    inquirer.prompt([{
-      type: 'confirm',
-      name: 'confirm',
-      message: 'Are you ready to publish ' + self.NEXT_VERSION + '?',
-    }], function (answers) {
-      if (answers.confirm) {
-        resolve();
-      } else {
-        reject('Cancelled.');
-      }
-    });
+  promptAsync([{
+    type: 'confirm',
+    name: 'confirm',
+    message: 'Are you ready to publish ' + this.NEXT_VERSION + '?',
+  }]).then(function (answers) {
+    if (!answers.confirm) throw new Error('Cancelled.');
   });
 };
 
@@ -125,11 +103,11 @@ var updateBowerJson = function() {
 };
 
 var getUnstagedFiles = function() {
-  return Repo.statusAsync().then(function(status) {
-    return status.not_staged.map(function(item) {
+  return Repo.statusAsync()
+    .get('not_staged')
+    .map(function (item) {
       return item.file;
     });
-  });
 };
 
 var addAllRepoFiles = function (files) {
@@ -148,45 +126,17 @@ var tagNextVersion = function () {
 };
 
 var checkIfReadyToPush = function () {
-  var self = this;
-  return new Promise(function (resolve, reject) {
-    inquirer.prompt([{
-      type: 'confirm',
-      name: 'confirm',
-      message: 'Are you ready to push v' + self.NEXT_VERSION + ' to origin?',
-    }], function (answers) {
-      if (answers.confirm) {
-        resolve();
-      } else {
-        reject('Cancelled.');
-      }
-    });
-  });
-};
-
-var getGitCredentials = function () {
-  return new Promise(function (resolve, reject) {
-    inquirer.prompt([{
-      type: 'input',
-      name: 'username',
-      message: 'Whats your github username?'
-    }, {
-      type: 'password',
-      name: 'password',
-      message: 'Whats your github password?'
-    }], function (answers) {
-      resolve(answers);
-    });
+  return promptAsync([{
+    type: 'confirm',
+    name: 'confirm',
+    message: 'Are you ready to push v' + this.NEXT_VERSION + ' to origin?',
+  }]).then(function (answers) {
+    if (!answers.confirm) throw new Error('Cancelled.');
   });
 };
 
 var pushBranchToOrigin = function (credentials) {
-  return new Promise(function (resolve, reject) {
-    Repo.push('origin', 'master', [], function (err) {
-      if (err) return reject( err );
-      resolve();
-    }, credentials);
-  });
+  return Repo.pushAsync('origin', 'master', []);
 };
 
 var publishToNPM = function () {
@@ -214,7 +164,6 @@ module.exports = function () {
     .then( commitNextVersion )
     .then( tagNextVersion )
     .then( checkIfReadyToPush )
-    .then( getGitCredentials )
     .then( pushBranchToOrigin )
     .then( publishToNPM );
 };
