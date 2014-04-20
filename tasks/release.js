@@ -67,12 +67,11 @@ var checkForBadVersion = function() {
 var editChangelog = function() {
   console.log('VIM: Edited CHANGELOG');
   return editorAsync('CHANGELOG.md');
-  // return execAsyncProcess('subl -w CHANGELOG.md');
 };
 
 var editUpgradeGuide = function() {
   console.log('VIM: Edited Upgrade Guide');
-  return execAsyncProcess('vim', ['UPGRADE-GUIDE.md'], { stdio: 'inherit' });
+  return editorAsync('UPGRADE-GUIDE.md');
 };
 
 var confirmReadyToPublish = function() {
