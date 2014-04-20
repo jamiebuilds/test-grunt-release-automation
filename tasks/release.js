@@ -113,10 +113,6 @@ var updateJsonFileVersion = function(file, version) {
   data = JSON.stringify(data, null, 2);
   data += '\n';
 
-  console.log(data);
-
-  throw new Error('hga');
-
   return fs.writeFileAsync(filepath, data);
 };
 
