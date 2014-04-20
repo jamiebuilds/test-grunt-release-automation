@@ -10,10 +10,11 @@
   "license": "ISC",
   "devDependencies": {
     "grunt": "^0.4.4",
-    "grunt-init": "^0.3.1",
+    "grunt-init": "^0.3.1"
+  },
+  "dependencies": {
     "inquirer": "^0.4.1",
     "async": "^0.7.0",
-    "underscore": "^1.6.0",
     "gitty": "^2.1.0",
     "shelljs": "^0.2.6",
     "editor": "^0.1.0"
